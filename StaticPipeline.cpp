@@ -12,21 +12,20 @@
 #include <omp.h>
 
 #include "Progress.hpp"
-#include <CoreBlasTile.hpp>
-#include <TMatrix.hpp>
+#include "Kernels.hpp"
 
-void tileQR( const int MT, const int NT, TMatrix& A, TMatrix& T )
+void tileQR( const int MT, const int NT, const int NB, const int IB )
 {
 	// Progress Table
 	Progress_Table Pt( MT, NT, min(MT,NT) );
 	Pt.Init();
 	Pt.setIJK(0, 0, 0, NYET);
 
-	double ttime = omp_get_wtime();
+	double time = 0.0;
+	double ttime, tmp;
+	double max;
 
-	////////////////////////////////////////////////////////////////////////////
-	// Static Pipeline tile QR
-	#pragma omp parallel firstprivate(ttime)
+	#pragma omp parallel private(ttime,tmp)
 	{
 		int tk = 0;
 		int tj = omp_get_thread_num();
