@@ -31,7 +31,7 @@ SPOBJS =		TileQR.o Kernels.o Progress.o StaticPipeline.o
 DSOBJS =		TileQR.o Kernels.o Progress.o DynamicSched.o
 RTOBJS =		TileQR.o Kernels.o RightLooking_Task.o
 
-all: RL LL SP
+all: RL LL SP RT
 
 RL:	$(RLOBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $(RLOBJS)

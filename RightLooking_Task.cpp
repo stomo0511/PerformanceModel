@@ -11,15 +11,11 @@
 #include <algorithm>
 #include <omp.h>
 
-#include <CoreBlasTile.hpp>
-#include <TMatrix.hpp>
+#include "Kernels.hpp"
 
 using namespace std;
 
-//#define COUT
-//#define ANIM
-
-void tileQR( const int MT, const int NT, TMatrix& A, TMatrix& T )
+void tileQR( const int MT, const int NT, const int NB, const int IB )
 {
 	// Progress table
 	int **Ap, **Tp;
@@ -32,15 +28,11 @@ void tileQR( const int MT, const int NT, TMatrix& A, TMatrix& T )
 	for (int i=0; i<MT; i++)
 		Tp[i] = (int *)malloc( sizeof(int) * NT);
 
-	#ifdef ANIM
-	cout << "Kernel,Ii,Ij,Ik,Time\n";
-	#endif
+	double time = 0.0;
+	double ttime;
+	double max;
 
-	double ttime = omp_get_wtime();
-
-	//////////////////////////////////////////////////////////////////////
-	// Right Looking tile QR Task version
-	#pragma omp parallel firstprivate(ttime)
+	#pragma omp parallel private(ttime)
 	{
 		#pragma omp single
 		{
@@ -48,70 +40,66 @@ void tileQR( const int MT, const int NT, TMatrix& A, TMatrix& T )
 			{
 				#pragma omp task depend(inout:Ap[tk][tk]) depend(out:Tp[tk][tk])
 				{
-					GEQRT( A(tk,tk), T(tk,tk) );
-
-					#ifdef COUT
-					#pragma omp critical
-					cout << "GEQRT(" << tk << "," << tk << "," << tk << ") : " << omp_get_thread_num() << " : " << omp_get_wtime() - ttime << "\n";
-					#endif
-					#ifdef ANIM
-					cout << "GL," << tk << "," << tk << "," << tk << "," << omp_get_wtime() - ttime << endl;
-					#endif
+					//GEQRT( A(tk,tk), T(tk,tk) );
+					time += T_GEQRT(NB,IB);
 				}
 
+				ttime = 0.0;
 				for (int tj=tk+1; tj < NT; tj++)
 				{
 					#pragma omp task depend(in:Tp[tk][tk]) depend(inout:Ap[tk][tj])
 					{
-						LARFB( PlasmaLeft, PlasmaTrans, A(tk,tk), T(tk,tk), A(tk,tj) );
-
-						#ifdef COUT
-						#pragma omp critical
-						cout << "LARFB(" << tk << "," << tj << "," << tk << ") : " << omp_get_thread_num() << " : " << omp_get_wtime() - ttime << "\n";
-						#endif
-						#ifdef ANIM
-						#pragma omp critical
-						cout << "LL," << tk << "," << tj << "," << tk << "," << omp_get_wtime() - ttime << endl;
-						#endif
+						//LARFB( PlasmaLeft, PlasmaTrans, A(tk,tk), T(tk,tk), A(tk,tj) );
+						ttime += T_LARFB(NB,IB);
 					}
+				}
+
+				max = 0.0;
+				#pragma omp critical
+				{
+					if (max < ttime)
+						max = ttime;
+				}
+				#pragma omp master
+				{
+					time += ttime;
 				}
 
 				for (int ti=tk+1; ti < MT; ti++)
 				{
 					#pragma omp task depend(inout:Ap[tk][tk]) depend(out:Ap[ti][tk], Tp[ti][tk])
 					{
-						TSQRT( A(tk,tk), A(ti,tk), T(ti,tk) );
-
-						#ifdef COUT
-						#pragma omp critical
-						cout << "TSQRT(" << ti << "," << tk << "," << tk << ") : " << omp_get_thread_num() << " : " << omp_get_wtime() - ttime << "\n";
-						#endif
-						#ifdef ANIM
-						#pragma omp critical
-						cout << "TL," << ti << "," << tk << "," << tk << "," << omp_get_wtime() - ttime << endl;
-						#endif
+						//TSQRT( A(tk,tk), A(ti,tk), T(ti,tk) );
+						time += T_TSQRT(NB,IB);
 					}
 
+					ttime = 0.0;
 					for (int tj=tk+1; tj < NT; tj++)
 					{
 						#pragma omp task depend(in:Tp[ti][tk]) depend(inout:Ap[tk][tj], Ap[ti][tj])
 						{
-							SSRFB( PlasmaLeft, PlasmaTrans, A(ti,tk), T(ti,tk), A(tk,tj), A(ti,tj) );
-
-							#ifdef COUT
-							#pragma omp critical
-							cout << "SSRFB(" << ti << "," << tj << "," << tk << ") : " << omp_get_thread_num() << " : " << omp_get_wtime() - ttime << "\n";
-							#endif
-							#ifdef ANIM
-							#pragma omp critical
-							cout << "SL," << ti << "," << tj << "," << tk << "," << omp_get_wtime() - ttime << endl;
-							#endif
+							//SSRFB( PlasmaLeft, PlasmaTrans, A(ti,tk), T(ti,tk), A(tk,tj), A(ti,tj) );
+							ttime += T_SSRFB(NB,IB);
 						}
 					} // j-LOOP END
+
+					max = 0.0;
+					#pragma omp critical
+					{
+						if (max < ttime)
+							max = ttime;
+					}
+					#pragma omp master
+					{
+						time += ttime;
+					}
+
 				} // i-LOOP END
 			} // k-LOOP END
 		} // parallel section END
 	}
 	// Right Looking tile QR task END
 	//////////////////////////////////////////////////////////////////////
+	cout << "# of threads = " << omp_get_max_threads() << endl;
+	cout << "time = " << time << endl;
 }
