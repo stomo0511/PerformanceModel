@@ -14,6 +14,8 @@
 #include "Progress.hpp"
 #include "Kernels.hpp"
 
+using namespace std;
+
 void tileQR( const int MT, const int NT, const int NB, const int IB )
 {
 	// Progress Table
@@ -27,6 +29,8 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 
 	#pragma omp parallel private(ttime,tmp)
 	{
+		ttime = 0.0;
+
 		int tk = 0;
 		int tj = omp_get_thread_num();
 
@@ -63,30 +67,34 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 				{
 					// GEQRT
 					if (tk != 0)
+					{
+						tmp = omp_get_wtime();
 						Pt.check_waitIJK( tk, tk, tk-1 );	// Check for SSRFB_(tk,tk,tk-1)
+						ttime += omp_get_wtime() - tmp;
+					}
 
-					GEQRT( A(tk,tk), T(tk,tk) );
+					//GEQRT( A(tk,tk), T(tk,tk) );
+					ttime += T_GEQRT(NB,IB);
 
-					#ifdef DEBUG
-					#pragma omp critical
-					cout << "GEQRT(" << tk << "," << tk << "," << tk << ") : " << omp_get_thread_num() << " : " << omp_get_wtime() - ttime << "\n";
-					#endif
-
+					tmp = omp_get_wtime();
 					Pt.setIJK(tk, tk, tk, DONE);			// Progress table update
+					ttime += omp_get_wtime() - tmp;
 				}   // GEQRT END
 				else {
 					// TSQRT
 					if (tk != 0)
+					{
+						tmp = omp_get_wtime();
 						Pt.check_waitIJK( ti, tk, tk-1 );	// Check for SSRFB_(ti,tk,tk-1)
+						ttime += omp_get_wtime() - tmp;
+					}
 
-					TSQRT( A(tk,tk), A(ti,tk), T(ti,tk) );
+					//TSQRT( A(tk,tk), A(ti,tk), T(ti,tk) );
+					ttime += T_TSQRT(NB,IB);
 
-					#ifdef DEBUG
-					#pragma omp critical
-					cout << "TSQRT(" << ti << "," << tk << "," << tk << ") : " << omp_get_thread_num() << " : " << omp_get_wtime() - ttime << "\n";
-					#endif
-
+					tmp = omp_get_wtime();
 					Pt.setIJK(ti, tk, tk, DONE);			// Progress table update
+					ttime += omp_get_wtime() - tmp;
 				}   // TSQRT END
 			} // Decomposition Kernel END
 			else // Update Kernel
@@ -94,33 +102,40 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 				if (ti == tk)
 				{
 					// LARFB
+					tmp = omp_get_wtime();
 					Pt.check_waitIJK( tk, tk, tk );			// Check for GEQRT_(tk,tk,tk)
+					ttime += omp_get_wtime() - tmp;
+
 					if (tk != 0)
+					{
+						tmp = omp_get_wtime();
 						Pt.check_waitIJK( tk, tj, tk-1 );	// Check for SSRFB_(tk,tj,tk-1)
+						ttime += omp_get_wtime() - tmp;
+					}
 
-					LARFB( PlasmaLeft, PlasmaTrans, A(tk,tk), T(tk,tk), A(tk,tj) );
-
-					#ifdef DEBUG
-					#pragma omp critical
-					cout << "LARFB(" << tk << "," << tj << "," << tk << ") : " << omp_get_thread_num() << " : " << omp_get_wtime() - ttime << "\n";
-					#endif
+					//LARFB( PlasmaLeft, PlasmaTrans, A(tk,tk), T(tk,tk), A(tk,tj) );
+					ttime += T_LARFB(NB,IB);
 
 				}   // LARFB END
 				else
 				{
 					// SSRFB
+					tmp = omp_get_wtime();
 					Pt.check_waitIJK( ti, tk, tk );			// Check for TSQRT_(ti,tk,tk)
+					ttime += omp_get_wtime() - tmp;
 					if (tk != 0)
+					{
+						tmp = omp_get_wtime();
 						Pt.check_waitIJK( ti, tj, tk-1 );	// Check for SSRFB_(ti,tj,tk-1)
+						ttime += omp_get_wtime() - tmp;
+					}
 
-					SSRFB( PlasmaLeft, PlasmaTrans, A(ti,tk), T(ti,tk), A(tk,tj), A(ti,tj) );
+					//SSRFB( PlasmaLeft, PlasmaTrans, A(ti,tk), T(ti,tk), A(tk,tj), A(ti,tj) );
+					ttime += T_SSRFB(NB,IB);
 
-					#ifdef DEBUG
-					#pragma omp critical
-					cout << "SSRFB(" << ti << "," << tj << "," << tk << ") : " << omp_get_thread_num() << " : " << omp_get_wtime() - ttime << "\n";
-					#endif
-
+					tmp = omp_get_wtime();
 					Pt.setIJK(ti, tj, tk, DONE);			// Progress table update
+					ttime += omp_get_wtime() - tmp;
 				}    // SSRFB END
 			} // Update Kernel END
 
@@ -128,6 +143,9 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 			tj = next_j;
 			tk = next_k;
 		} // while-LOOP end
+
+		#pragma omp critical
+		cout << "I'm " << omp_get_thread_num() << ", time = " << ttime << endl;
 	} // End of outer most loop
 	// Static Pipeline QR END
 	////////////////////////////////////////////////////////////////////////////
