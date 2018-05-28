@@ -10,7 +10,7 @@
 #include <cassert>
 #include <cstdlib>
 
-#define DEBUG
+//#define DEBUG
 
 using namespace std;
 
@@ -36,6 +36,8 @@ int main(int argc, const char * argv[])
 	cout << "M = " << M << ", N = " << N << ", NB = " << NB << ", IB = " << IB << endl;
 	cout << "clock precision = " << omp_get_wtick() << endl;
 	#endif
+
+	cout << M << ", ";
 
 	const int MT = ( M % NB == 0 ? M / NB : M / NB +1 );
 	const int NT = ( N % NB == 0 ? N / NB : N / NB +1 );

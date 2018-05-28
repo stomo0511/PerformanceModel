@@ -74,7 +74,7 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 			} // End if ( k < MT )
 
 			if (tk == NT-1)
-				cout << "time = " << ttime << endl;
+				cout << NB << ", " << IB << ", " << ttime << endl;
 		} // End of k-loop
 
 	}  // End of parallel section
