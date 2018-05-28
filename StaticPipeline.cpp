@@ -144,8 +144,15 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 			tk = next_k;
 		} // while-LOOP end
 
+		max = 0.0;
 		#pragma omp critical
-		cout << "I'm " << omp_get_thread_num() << ", time = " << ttime << endl;
+		{
+		  if (max < ttime)
+		    max = ttime;
+		}
+		#pragma omp master
+		cout << NB << ", " << IB << ", " << max << endl;
+
 	} // End of outer most loop
 	// Static Pipeline QR END
 	////////////////////////////////////////////////////////////////////////////
