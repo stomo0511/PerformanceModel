@@ -150,6 +150,7 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 		  if (max < ttime)
 		    max = ttime;
 		}
+		#pragma omp barrier
 		#pragma omp master
 		cout << NB << ", " << IB << ", " << max << endl;
 
