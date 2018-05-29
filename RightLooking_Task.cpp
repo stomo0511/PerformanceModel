@@ -28,11 +28,12 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 	for (int i=0; i<MT; i++)
 		Tp[i] = (int *)malloc( sizeof(int) * NT);
 
-	double time = 0.0;
-	double ttime;
+	static double ttime = 0.0;
 	double max;
 
-	#pragma omp parallel private(ttime)
+	#pragma omp threadprivate(ttime)
+
+	#pragma omp parallel
 	{
 		#pragma omp single
 		{
@@ -41,10 +42,9 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 				#pragma omp task depend(inout:Ap[tk][tk]) depend(out:Tp[tk][tk])
 				{
 					//GEQRT( A(tk,tk), T(tk,tk) );
-					time += T_GEQRT(NB,IB);
+					ttime += T_GEQRT(NB,IB);
 				}
 
-				ttime = 0.0;
 				for (int tj=tk+1; tj < NT; tj++)
 				{
 					#pragma omp task depend(in:Tp[tk][tk]) depend(inout:Ap[tk][tj])
@@ -54,26 +54,14 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 					}
 				}
 
-				max = 0.0;
-				#pragma omp critical
-				{
-					if (max < ttime)
-						max = ttime;
-				}
-				#pragma omp master
-				{
-					time += ttime;
-				}
-
 				for (int ti=tk+1; ti < MT; ti++)
 				{
 					#pragma omp task depend(inout:Ap[tk][tk]) depend(out:Ap[ti][tk], Tp[ti][tk])
 					{
 						//TSQRT( A(tk,tk), A(ti,tk), T(ti,tk) );
-						time += T_TSQRT(NB,IB);
+						ttime += T_TSQRT(NB,IB);
 					}
 
-					ttime = 0.0;
 					for (int tj=tk+1; tj < NT; tj++)
 					{
 						#pragma omp task depend(in:Tp[ti][tk]) depend(inout:Ap[tk][tj], Ap[ti][tj])
@@ -82,24 +70,16 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 							ttime += T_SSRFB(NB,IB);
 						}
 					} // j-LOOP END
-
-					max = 0.0;
-					#pragma omp critical
-					{
-						if (max < ttime)
-							max = ttime;
-					}
-					#pragma omp master
-					{
-						time += ttime;
-					}
-
 				} // i-LOOP END
 			} // k-LOOP END
-		} // parallel section END
+		} // single section END
+
+//		#pragma omp master
+//		cout << NB << ", " << IB << ", " << ttime << endl;
+		#pragma omp barrier
+		#pragma omp critical
+		cout << "I'm " << omp_get_thread_num() << ", ttime = " << ttime << endl;
 	}
 	// Right Looking tile QR task END
 	//////////////////////////////////////////////////////////////////////
-	cout << "# of threads = " << omp_get_max_threads() << endl;
-	cout << "time = " << time << endl;
 }
