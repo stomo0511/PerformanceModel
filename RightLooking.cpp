@@ -18,20 +18,20 @@ using namespace std;
 void tileQR( const int MT, const int NT, const int NB, const int IB )
 {
 	double time = 0.0;
-	double ttime;
+	static double ttime = 0.0;
 	double max;
 
 	for (int tk=0; tk < min(MT,NT); tk++ )
 	{
-		#pragma omp parallel private(ttime)
+		#pragma omp parallel
 		{
-			#pragma omp master
+			ttime = 0.0;
+			#pragma omp single
 			{
 				//GEQRT( A(tk,tk), T(tk,tk) );
-				time += T_GEQRT(NB,IB);
+				ttime += T_GEQRT(NB,IB);
 			}
 
-			ttime = 0.0;
 			#pragma omp for
 			for (int tj=tk+1; tj < NT; tj++)
 			{
@@ -39,48 +39,38 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 				ttime += T_LARFB(NB,IB);
 			} // j-LOOP END
 
-			max = 0.0;
-			#pragma omp critical
-			{
-				if (max < ttime)
-					max = ttime;
-			}
-			#pragma omp master
-			{
-				time += ttime;
-			}
-
 			for (int ti=tk+1; ti < MT; ti++)
 			{
-				#pragma omp master
+				#pragma omp single
 				{
 					//TSQRT( A(tk,tk), A(ti,tk), T(ti,tk) );
-					time += T_TSQRT(NB,IB);
+					ttime += T_TSQRT(NB,IB);
 				}
 
-				ttime = 0.0;
 				#pragma omp for
 				for (int tj=tk+1; tj < NT; tj++)
 				{
 					//SSRFB( PlasmaLeft, PlasmaTrans, A(ti,tk), T(ti,tk), A(tk,tj), A(ti,tj) );
 					ttime += T_SSRFB(NB,IB);
 				} // j-LOOP END
-
-				max = 0.0;
-				#pragma omp critical
-				{
-					if (max < ttime)
-						max = ttime;
-				}
-				#pragma omp master
-				{
-					time += ttime;
-				}
 			} // i-LOOP END
+
+			max = 0.0;
+			#pragma omp critical
+			{
+				if (max < ttime)
+					max = ttime;
+			}
+			#pragma omp barrier
+			#pragma omp master
+			{
+				cout << max << endl;
+				time += max;
+			}
+
 		} // parallel section END
 	} // k-LOOP END
 	// Right Looking tile QR END
 	//////////////////////////////////////////////////////////////////////
-	cout << "# of threads = " << omp_get_max_threads() << endl;
-	cout << "time = " << time << endl;
+	cout << NB << ", " << IB << ", " << time << endl;
 }
