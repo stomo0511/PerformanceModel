@@ -47,7 +47,7 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 			}
 			#pragma omp master
 			{
-				time += ttime;
+				time += max;
 			}
 
 			for (int ti=tk+1; ti < MT; ti++)
@@ -74,13 +74,13 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 				}
 				#pragma omp master
 				{
-					time += ttime;
+					time += max;
 				}
 			} // i-LOOP END
 		} // parallel section END
 	} // k-LOOP END
 	// Right Looking tile QR END
 	//////////////////////////////////////////////////////////////////////
-	cout << "# of threads = " << omp_get_max_threads() << endl;
-	cout << "time = " << time << endl;
+	#pragma omp master
+	cout << NB << ", " << IB << ", " << time << endl;
 }
