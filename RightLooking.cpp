@@ -66,6 +66,7 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 			if (time < ttime)
 				time = ttime;
 		}
+		#pragma barrier
 	}
 
 	cout << NB << ", " << IB << ", " << time << endl;

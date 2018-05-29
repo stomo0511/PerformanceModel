@@ -74,11 +74,14 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 			} // k-LOOP END
 		} // single section END
 
-//		#pragma omp master
-//		cout << NB << ", " << IB << ", " << ttime << endl;
 		#pragma omp barrier
 		#pragma omp critical
-		cout << "I'm " << omp_get_thread_num() << ", ttime = " << ttime << endl;
+		if (max < ttime)
+			max = ttime;
+		#pragma omp barrier
+
+		#pragma omp master
+		cout << NB << ", " << IB << ", " << max << endl;
 	}
 	// Right Looking tile QR task END
 	//////////////////////////////////////////////////////////////////////
