@@ -25,7 +25,7 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 	{
 		#pragma omp parallel
 		{
-			#pragma omp single
+			#pragma omp master
 			{
 				//GEQRT( A(tk,tk), T(tk,tk) );
 				ttime += T_GEQRT(NB,IB);
@@ -40,7 +40,7 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 
 			for (int ti=tk+1; ti < MT; ti++)
 			{
-				#pragma omp single
+				#pragma omp master
 				{
 					//TSQRT( A(tk,tk), A(ti,tk), T(ti,tk) );
 					ttime += T_TSQRT(NB,IB);

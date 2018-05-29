@@ -29,7 +29,6 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 		Tp[i] = (int *)malloc( sizeof(int) * NT);
 
 	static double ttime = 0.0;
-	double max;
 
 	#pragma omp threadprivate(ttime)
 
@@ -74,15 +73,21 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 			} // k-LOOP END
 		} // single section END
 
-		#pragma omp barrier
-		#pragma omp critical
-		if (max < ttime)
-			max = ttime;
-		#pragma omp barrier
-
-		#pragma omp master
-		cout << NB << ", " << IB << ", " << max << endl;
 	}
 	// Right Looking tile QR task END
 	//////////////////////////////////////////////////////////////////////
+
+	double time = 0.0;
+	#pragma omp parallel
+	{
+		#pragma omp critical
+		{
+			if (time < ttime)
+				time = ttime;
+		}
+		#pragma barrier
+	}
+
+	cout << NB << ", " << IB << ", " << time << endl;
+
 }

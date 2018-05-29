@@ -23,14 +23,14 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 	Pt.Init();
 	Pt.setIJK(0, 0, 0, NYET);
 
-	double time = 0.0;
-	double ttime, tmp;
-	double max;
+	double tmp;
+	static double ttime = 0.0;
+
+	#pragma omp threadprivate(ttime)
 
 	#pragma omp parallel
 	{
-		ttime = 0.0;
-		#pragma omp for schedule(static,1) private(ttime,tmp)
+		#pragma omp for schedule(static,1) private(tmp)
 		for (int tk = 0; tk < NT; tk++)
 		{
 			for (int tl = 0; tl < min(MT,tk); tl++)
@@ -73,11 +73,24 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 				} // End of i-loop
 			} // End if ( k < MT )
 
-			if (tk == NT-1)
-				cout << NB << ", " << IB << ", " << ttime << endl;
 		} // End of k-loop
 
 	}  // End of parallel section
+
+
+	double time = 0.0;
+	#pragma omp parallel
+	{
+		#pragma omp critical
+		{
+			if (time < ttime)
+				time = ttime;
+		}
+		#pragma barrier
+	}
+
+	cout << NB << ", " << IB << ", " << time << endl;
+
 	// Left Looking tile QR END
 	////////////////////////////////////////////////////////////////////////////
 }

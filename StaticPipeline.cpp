@@ -23,14 +23,14 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 	Pt.Init();
 	Pt.setIJK(0, 0, 0, NYET);
 
-	double time = 0.0;
-	double ttime, tmp;
-	double max;
+	double tmp;
+	static double ttime = 0.0;
 
-	#pragma omp parallel private(ttime,tmp)
+	#pragma omp threadprivate(ttime)
+
+
+	#pragma omp parallel private(tmp)
 	{
-		ttime = 0.0;
-
 		int tk = 0;
 		int tj = omp_get_thread_num();
 
@@ -144,17 +144,21 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 			tk = next_k;
 		} // while-LOOP end
 
-		max = 0.0;
+	} // End of outer most loop
+
+	double time = 0.0;
+	#pragma omp parallel
+	{
 		#pragma omp critical
 		{
-		  if (max < ttime)
-		    max = ttime;
+			if (time < ttime)
+				time = ttime;
 		}
-		#pragma omp barrier
-		#pragma omp master
-		cout << NB << ", " << IB << ", " << max << endl;
+		#pragma barrier
+	}
 
-	} // End of outer most loop
+	cout << NB << ", " << IB << ", " << time << endl;
+
 	// Static Pipeline QR END
 	////////////////////////////////////////////////////////////////////////////
 }
