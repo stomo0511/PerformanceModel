@@ -28,7 +28,6 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 
 	#pragma omp threadprivate(ttime)
 
-
 	#pragma omp parallel private(tmp)
 	{
 		int tk = 0;
@@ -68,33 +67,27 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 					// GEQRT
 					if (tk != 0)
 					{
-						tmp = omp_get_wtime();
 						Pt.check_waitIJK( tk, tk, tk-1 );	// Check for SSRFB_(tk,tk,tk-1)
-						ttime += omp_get_wtime() - tmp;
 					}
 
 					//GEQRT( A(tk,tk), T(tk,tk) );
 					ttime += T_GEQRT(NB,IB);
 
-					tmp = omp_get_wtime();
 					Pt.setIJK(tk, tk, tk, DONE);			// Progress table update
-					ttime += omp_get_wtime() - tmp;
+
 				}   // GEQRT END
 				else {
 					// TSQRT
 					if (tk != 0)
 					{
-						tmp = omp_get_wtime();
 						Pt.check_waitIJK( ti, tk, tk-1 );	// Check for SSRFB_(ti,tk,tk-1)
-						ttime += omp_get_wtime() - tmp;
 					}
 
 					//TSQRT( A(tk,tk), A(ti,tk), T(ti,tk) );
 					ttime += T_TSQRT(NB,IB);
 
-					tmp = omp_get_wtime();
 					Pt.setIJK(ti, tk, tk, DONE);			// Progress table update
-					ttime += omp_get_wtime() - tmp;
+
 				}   // TSQRT END
 			} // Decomposition Kernel END
 			else // Update Kernel
@@ -102,15 +95,11 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 				if (ti == tk)
 				{
 					// LARFB
-					tmp = omp_get_wtime();
 					Pt.check_waitIJK( tk, tk, tk );			// Check for GEQRT_(tk,tk,tk)
-					ttime += omp_get_wtime() - tmp;
 
 					if (tk != 0)
 					{
-						tmp = omp_get_wtime();
 						Pt.check_waitIJK( tk, tj, tk-1 );	// Check for SSRFB_(tk,tj,tk-1)
-						ttime += omp_get_wtime() - tmp;
 					}
 
 					//LARFB( PlasmaLeft, PlasmaTrans, A(tk,tk), T(tk,tk), A(tk,tj) );
@@ -120,22 +109,16 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 				else
 				{
 					// SSRFB
-					tmp = omp_get_wtime();
 					Pt.check_waitIJK( ti, tk, tk );			// Check for TSQRT_(ti,tk,tk)
-					ttime += omp_get_wtime() - tmp;
 					if (tk != 0)
 					{
-						tmp = omp_get_wtime();
 						Pt.check_waitIJK( ti, tj, tk-1 );	// Check for SSRFB_(ti,tj,tk-1)
-						ttime += omp_get_wtime() - tmp;
 					}
 
 					//SSRFB( PlasmaLeft, PlasmaTrans, A(ti,tk), T(ti,tk), A(tk,tj), A(ti,tj) );
 					ttime += T_SSRFB(NB,IB);
 
-					tmp = omp_get_wtime();
 					Pt.setIJK(ti, tj, tk, DONE);			// Progress table update
-					ttime += omp_get_wtime() - tmp;
 				}    // SSRFB END
 			} // Update Kernel END
 

@@ -18,10 +18,10 @@ double T_GEQRT( const int NB, const int IB )
 	const double s = (double)(IB);
 	double tk = 0.0;
 
-	const double A = 48.68;
-	const double B = 7.126;
-	const double C = 8.372;
-	const double D = 145.3;
+	const double A = 11.75;
+	const double B = 8.458;
+	const double C = 16.33;
+	const double D = 408.1;
 	tk = b*b*b / ( A / ( 1.0 + B*s/b + C/s + D/b ) ) / Giga;
 
 	return tk;
@@ -33,10 +33,10 @@ double T_TSQRT( const int NB, const int IB )
 	const double s = (double)(IB);
 	double tk = 0.0;
 
-	const double A = 30.05;
-	const double B = 9.952;
-	const double C = 7.171;
-	const double D = -14.73;
+	const double A = 7.780;
+	const double B = 8.855;
+	const double C = 23.52;
+	const double D = 204.6;
 	tk = b*b*b / ( A / ( 1.0 + B*s/b + C/s + D/b ) ) / Giga;
 
 	return tk;
@@ -48,11 +48,11 @@ double T_LARFB( const int NB, const int IB )
 	const double s = (double)(IB);
 	double tk = 0.0;
 
-	const double A = 21.45;
-	const double C = 20.55;
-	const double D = 308.7;
-	const double E = 1031;
-	tk = b*b*b / ( A / ( 1.0 + C/s + D/b + E*s/b/b ) ) / Giga;
+	const double A = 6.452;
+	const double B = 1.076;
+	const double C = 25.18;
+	const double D = 271.2;
+	tk = b*b*b / ( A / ( 1.0 + B*s/b + C/s + D/b ) ) / Giga;
 
 	return tk;
 }
@@ -63,11 +63,11 @@ double T_SSRFB( const int NB, const int IB )
 	const double s = (double)(IB);
 	double tk = 0.0;
 
-	const double A = 13.99;
-	const double C = 4.559;
-	const double D = 63.25;
-	const double E = 102.9;
-	tk = b*b*b / ( A / ( 1.0 + C/s + D/b + E*s/b/b ) ) / Giga;
+	const double A = 3.014;
+	const double B = 0.3322;
+	const double C = 31.17;
+	const double D = 24.86;
+	tk = b*b*b / ( A / ( 1.0 + B*s/b + C/s + D/b ) ) / Giga;
 
 	return tk;
 }
