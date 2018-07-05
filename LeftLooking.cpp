@@ -35,18 +35,18 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 		{
 			for (int tl = 0; tl < min(MT,tk); tl++)
 			{
-				tmp = omp_get_wtime();
+//				tmp = omp_get_wtime();
 				Pt.check_waitIJK(tl, tl, tl);	// Check for GEQRT_(tl,tl,tl)
-				ttime += omp_get_wtime() - tmp;
+//				ttime += omp_get_wtime() - tmp;
 
 				//LARFB( PlasmaLeft, PlasmaTrans, A(tl,tl), T(tl,tl), A(tl,tk) );
 				ttime += T_LARFB(NB,IB);
 
 				for (int ti = tl+1; ti < MT; ti++)
 				{
-					tmp = omp_get_wtime();
+//					tmp = omp_get_wtime();
 					Pt.check_waitIJK(ti, tl, tl);	// Check for TSQRT_(ti,tl,tl)
-					ttime += omp_get_wtime() - tmp;
+//					ttime += omp_get_wtime() - tmp;
 
 					//SSRFB( PlasmaLeft, PlasmaTrans, A(ti,tl), T(ti,tl), A(tl,tk), A(ti,tk) );
 					ttime += T_SSRFB(NB,IB);
@@ -58,18 +58,18 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 				//GEQRT( A(tk,tk), T(tk,tk) );
 				ttime += T_GEQRT(NB,IB);
 
-				tmp = omp_get_wtime();
+//				tmp = omp_get_wtime();
 				Pt.setIJK(tk, tk, tk, DONE);  // Progress table update
-				ttime += omp_get_wtime() - tmp;
+//				ttime += omp_get_wtime() - tmp;
 
 				for (int ti = tk+1; ti < MT; ti++)
 				{
 					//TSQRT( A(tk,tk), A(ti,tk), T(ti,tk) );
 					ttime += T_TSQRT(NB,IB);
 
-					tmp = omp_get_wtime();
+//					tmp = omp_get_wtime();
 					Pt.setIJK(ti, tk, tk, DONE);  // Progress table update
-					ttime += omp_get_wtime() - tmp;
+//					ttime += omp_get_wtime() - tmp;
 				} // End of i-loop
 			} // End if ( k < MT )
 

@@ -11,6 +11,7 @@
 #include <cassert>
 #include <algorithm>
 #include <omp.h>
+#include <unistd.h>
 
 #include "Progress.hpp"
 #include "Kernels.hpp"
@@ -32,6 +33,8 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 
 	double tmp;
 	static double ttime = 0.0;
+
+	static int wait = 10;
 
 	#pragma omp threadprivate(ttime)
 	
@@ -69,6 +72,7 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 					{
 						// GEQRT
 						ttime += T_GEQRT(NB,IB);
+						usleep(wait);
 
 						#ifdef DEBUG
 						#pragma omp critical
@@ -133,6 +137,7 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 					{
 						// TSQRT
 						ttime += T_TSQRT(NB,IB);
+						usleep(wait);
 
 						#ifdef DEBUG
 						#pragma omp critical
@@ -199,6 +204,7 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 					{
 						// LARFB
 						ttime += T_LARFB(NB,IB);
+						usleep(wait);
 
 						#ifdef DEBUG
 						#pragma omp critical
@@ -233,6 +239,7 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 					{
 						// SSRFB
 						ttime += T_SSRFB(NB,IB);
+						usleep(wait);
 
 						#ifdef DEBUG
 						#pragma omp critical

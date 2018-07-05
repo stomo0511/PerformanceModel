@@ -10,6 +10,7 @@
 #include <cassert>
 #include <algorithm>
 #include <omp.h>
+#include <unistd.h>
 
 #include "Kernels.hpp"
 
@@ -28,6 +29,8 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 	for (int i=0; i<MT; i++)
 		Tp[i] = (int *)malloc( sizeof(int) * NT);
 
+	static int wait = 10;
+
 	static double ttime = 0.0;
 
 	#pragma omp threadprivate(ttime)
@@ -42,6 +45,7 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 				{
 					//GEQRT( A(tk,tk), T(tk,tk) );
 					ttime += T_GEQRT(NB,IB);
+					usleep(wait);
 				}
 
 				for (int tj=tk+1; tj < NT; tj++)
@@ -50,6 +54,7 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 					{
 						//LARFB( PlasmaLeft, PlasmaTrans, A(tk,tk), T(tk,tk), A(tk,tj) );
 						ttime += T_LARFB(NB,IB);
+						usleep(wait);
 					}
 				}
 
@@ -59,6 +64,7 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 					{
 						//TSQRT( A(tk,tk), A(ti,tk), T(ti,tk) );
 						ttime += T_TSQRT(NB,IB);
+						usleep(wait);
 					}
 
 					for (int tj=tk+1; tj < NT; tj++)
@@ -67,6 +73,7 @@ void tileQR( const int MT, const int NT, const int NB, const int IB )
 						{
 							//SSRFB( PlasmaLeft, PlasmaTrans, A(ti,tk), T(ti,tk), A(tk,tj), A(ti,tj) );
 							ttime += T_SSRFB(NB,IB);
+							usleep(wait);
 						}
 					} // j-LOOP END
 				} // i-LOOP END
