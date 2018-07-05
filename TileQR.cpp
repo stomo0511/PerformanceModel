@@ -34,6 +34,7 @@ int main(int argc, const char * argv[])
 
 	#ifdef DEBUG
 	cout << "M = " << M << ", N = " << N << ", NB = " << NB << ", IB = " << IB << endl;
+	cout << "Max threads = " << omp_get_max_threads() << endl;
 	cout << "clock precision = " << omp_get_wtick() << endl;
 	#endif
 
